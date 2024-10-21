@@ -39,7 +39,7 @@ runs:
 
     - name: parse_and_upload.py
       id: pau
-      run: python ${{ github.action_path }}/src/parse_and_upload.py
+      run: source venv/bin/activate; ${{ github.action_path }}/src/parse_and_upload.py
       shell: bash
       env:
         SPHINX_BASE_URI: ${{ inputs.uribase }}

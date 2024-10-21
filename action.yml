@@ -19,7 +19,7 @@ inputs:
     required: true
   template:
     description: "Jinja Template that get's built"
-    default: "${{ github.action_path }}/src/template.html.jinja"
+    default: "./src/template.html.jinja"
 #outputs:
 #  num_squared:
 #    description: 'Square of the input'
@@ -39,8 +39,9 @@ runs:
 
     - name: parse_and_upload.py
       id: pau
-      run: source ${{ github.action_path }}/venv/bin/activate; ${{ github.action_path }}/src/parse_and_upload.py
+      run: source venv/bin/activate; ./src/parse_and_upload.py
       shell: bash
+      working-directory: ${{ github.action_path }}
       env:
         SPHINX_BASE_URI: ${{ inputs.uribase }}
         OBJECTS_FILE: ${{ inputs.intersphinx_file }}

@@ -44,7 +44,7 @@ runs:
       working-directory: ${{ github.action_path }}
       env:
         SPHINX_BASE_URI: ${{ inputs.uribase }}
-        OBJECTS_FILE: ${{ inputs.intersphinx_file }}
+        OBJECTS_FILE: ${{ github.path }}/${{ inputs.intersphinx_file }}
         DOCID: ${{ inputs.docID }}
         PAGEID: ${{ inputs.pageID }}
         CODA_TOKEN: ${{ inputs.coda_token }}

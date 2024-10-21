@@ -33,13 +33,13 @@ runs:
       with:
         python-version: '3.11'
         cache-dependency-path: |
-          requirements.txt
-        venv-dir: venv
+          ${{ github.action_path }}/requirements.txt
+        venv-dir: ${{ github.action_path }}/venv
         install-cmd: pip install -r ${{ github.action_path }}/requirements.txt
 
     - name: parse_and_upload.py
       id: pau
-      run: source venv/bin/activate; ${{ github.action_path }}/src/parse_and_upload.py
+      run: source ${{ github.action_path }}/venv/bin/activate; ${{ github.action_path }}/src/parse_and_upload.py
       shell: bash
       env:
         SPHINX_BASE_URI: ${{ inputs.uribase }}

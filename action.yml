@@ -35,7 +35,7 @@ runs:
         cache-dependency-path: |
           requirements.txt
         venv-dir: venv
-        install-cmd: pip install -r requirements.txt
+        install-cmd: pip install -r ${{ github.action_path }}/requirements.txt
 
     - name: parse_and_upload.py
       id: pau

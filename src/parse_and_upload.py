@@ -8,6 +8,7 @@ import argparse
 import logging
 import os
 import urllib.parse
+import pathlib
 import json
 import time
 import sys
@@ -15,6 +16,8 @@ import sys
 import requests
 import sphobjinv
 import jinja2
+
+import bs4
 
 
 def get_argparse():
@@ -28,6 +31,8 @@ def get_argparse():
                         default=os.environ.get("SPHINX_BASE_URI"))
     parser.add_argument("-f", "--objectfile", help="Intersphinx File", required=False,
                         default=os.environ.get("OBJECTS_FILE", "build/html/objects.inv"))
+    parser.add_argument("-c", "--linkclass", help="For HTML Files, what class are internal links saved as.", required=False,
+                        default=os.environ.get("LINK_CLASS", "reference internal"))
     parser.add_argument("-i", "--docID", help="CodaIO Document (Category) ID", required=False,
                         default=os.environ.get("DOCID"))
     parser.add_argument("-p", "--pageID", help="PageID for Coda", required=False,
@@ -61,6 +66,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
 
     logger = logging.getLogger("parse_and_upload.py")
+    wanted_format = "html"
 
     if os.path.isfile(args.objectfile) is False:
         raise FileNotFoundError("No Inventory file found at {}.".format(args.objectfile))
@@ -68,22 +74,56 @@ if __name__ == "__main__":
         raise FileNotFoundError("No Template file found at {}.".format(args.template))
 
     else:
+        intersphinx_file = pathlib.Path(args.objectfile)
         response_object = {"update_time": time.ctime()}
-        intersphinx_inventory = sphobjinv.Inventory(args.objectfile)
+        project_name = "Unspecified"
 
-        with open(args.template, "r") as template_fobj:
-            template_string = template_fobj.read()
+        if intersphinx_file.suffix == ".inv":
 
-            html_template = jinja2.Environment(loader=jinja2.BaseLoader,
-                                              autoescape=jinja2.select_autoescape(
-                                                  enabled_extensions=('html', 'xml'),
-                                                  default_for_string=False,
-                                              )).from_string(template_string)
+            intersphinx_inventory = sphobjinv.Inventory(args.objectfile)
+            project_name = intersphinx_inventory.project
 
-            rendered_html = html_template.render({"inventory": intersphinx_inventory,
-                                                  "baseuri": args.uribase})
+            with open(args.template, "r") as template_fobj:
+                template_string = template_fobj.read()
 
-            #print(rendered_html)
+                html_template = jinja2.Environment(loader=jinja2.BaseLoader,
+                                                  autoescape=jinja2.select_autoescape(
+                                                      enabled_extensions=('html', 'xml'),
+                                                      default_for_string=False,
+                                                  )).from_string(template_string)
+
+                rendered_html = html_template.render({"inventory": intersphinx_inventory,
+                                                      "baseuri": args.uribase})
+
+        elif intersphinx_file.suffix == ".html":
+
+            with open(intersphinx_file, "r") as source_fobj:
+
+                source_html_obj = bs4.BeautifulSoup(source_fobj)
+                project_name = source_html_obj.title.string
+
+                # Strip some stuff
+                for item in source_html_obj.contents[:10]:
+                    if isinstance(item, bs4.Doctype):
+                        item.extract()
+
+                for data in source_html_obj(["style", "script", "svg", "link",
+                                             "meta", "input", "label", "header",
+                                             "aside", "span", "button"]):
+                    data.decompose()
+
+                for alink in source_html_obj.find_all("a", attrs={'class': args.linkclass}):
+                    if alink["href"].startswith("#"):
+                        # Pass this is a self link
+                        continue
+                    else:
+                        new_url = urllib.parse.urljoin(args.uribase, alink["href"])
+
+                        alink["href"] = new_url
+
+                rendered_html = str(source_html_obj).replace("\n", "")
+
+                print(rendered_html)
 
         ## Coda Stuff
 
@@ -104,7 +144,7 @@ if __name__ == "__main__":
         else:
 
             update_payload = {
-                "name": intersphinx_inventory.project,
+                "name": project_name,
                 "subtitle": "Generated Time: {ctime}".format(ctime=response_object["update_time"]),
                 "contentUpdate": {
                     "insertionMode": "replace",

@@ -1,0 +1,49 @@
+# action.yaml
+name: "Sphinx to Coda Action"
+description: "Ideally this should take an Intersphinx Item and Upload an Index of that Documentation to Coda.io"
+inputs:
+  uribase:
+    description: "The base URL of the project. Somethin like http://example.com/docs/"
+    required: true
+  intersphinx_file:
+    description: 'The location of the objects.inv file'
+    default: "build/html/objects.inv"
+  docID:
+    description: "The DocID Where the resulting documentation should go."
+    required: true
+  pageID:
+    description: "The Specific PageID that will get overwritten."
+    required: true
+  coda_token:
+    description: "Coda API Token"
+    required: true
+  template:
+    description: "Jinja Template that get's built"
+    default: "${{ github.action_path }}/src/template.html.jinja"
+#outputs:
+#  num_squared:
+#    description: 'Square of the input'
+#    # need to specify the extra `value` field for `composite` actions
+#    value: ${{ steps.get-square.outputs.num_squared }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+      shell: bash
+    - name: parse_and_upload.py
+      id: pau
+      run: python ${{ github.action_path }}/src/parse_and_upload.py
+      shell: bash
+      env:
+        SPHINX_BASE_URI: ${{ inputs.uribase }}
+        OBJECTS_FILE: ${{ inputs.intersphinx_file }}
+        DOCID: ${{ inputs.docID }}
+        PAGEID: ${{ inputs.pageID }}
+        CODA_TOKEN: ${{ inputs.coda_token }}
+        TEMPLATE: ${{ inputs.template }}
+

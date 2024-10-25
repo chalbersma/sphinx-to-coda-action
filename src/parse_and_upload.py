@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
             with open(intersphinx_file, "r") as source_fobj:
 
-                source_html_obj = bs4.BeautifulSoup(source_fobj)
+                source_html_obj = bs4.BeautifulSoup(source_fobj, features="html.parser")
                 project_name = source_html_obj.title.string
 
                 # Strip some stuff

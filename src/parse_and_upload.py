@@ -132,7 +132,8 @@ if __name__ == "__main__":
                 for admonition_div in source_html_obj.find_all('div', {'class': "admonition"}):
                     admonition_div.wrap(source_html_obj.new_tag("aside"))
 
-                rendered_html = str(source_html_obj) #.replace("\n", "")
+                spacey_rendered_html = str(source_html_obj) #.replace("\n", "")
+                rendered_html = re.sub(r"\n+", "\n", spacey_rendered_html)
 
                 print(rendered_html)
 

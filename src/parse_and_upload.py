@@ -12,6 +12,7 @@ import pathlib
 import json
 import time
 import sys
+import re
 
 import requests
 import sphobjinv
@@ -109,7 +110,7 @@ if __name__ == "__main__":
 
                 for data in source_html_obj(["style", "script", "svg", "link",
                                              "meta", "input", "label", "header",
-                                             "aside", "span", "button"]):
+                                             "aside", "button", "symbol"]):
                     data.decompose()
 
                 for alink in source_html_obj.find_all("a", attrs={'class': args.linkclass}):
@@ -124,7 +125,14 @@ if __name__ == "__main__":
                     if selflink["href"].startswith("#"):
                         selflink.decompose()
 
-                rendered_html = str(source_html_obj).replace("\n", "")
+                for span_strip in source_html_obj.find_all("span"):
+                    span_strip.unwrap()
+
+                # Handle Admonitions
+                for admonition_div in source_html_obj.find_all('div', {'class': "admonition"}):
+                    admonition_div.wrap(source_html_obj.new_tag("aside"))
+
+                rendered_html = str(source_html_obj) #.replace("\n", "")
 
                 print(rendered_html)
 

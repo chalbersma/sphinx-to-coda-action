@@ -114,8 +114,7 @@ if __name__ == "__main__":
 
                 for alink in source_html_obj.find_all("a", attrs={'class': args.linkclass}):
                     if alink["href"].startswith("#"):
-                        # Pass this is a self link
-                        continue
+                        alink.decompose()
                     else:
                         new_url = urllib.parse.urljoin(args.uribase, alink["href"])
 

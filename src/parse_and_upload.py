@@ -120,6 +120,10 @@ if __name__ == "__main__":
 
                         alink["href"] = new_url
 
+                for selflink in source_html_obj.find_all("a"):
+                    if selflink["href"].startswith("#"):
+                        selflink.decompose()
+
                 rendered_html = str(source_html_obj).replace("\n", "")
 
                 print(rendered_html)

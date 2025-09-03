@@ -6,20 +6,42 @@ inputs:
     description: "The base URL of the project. Somethin like http://example.com/docs/"
     required: true
   intersphinx_file:
-    description: 'The location of the objects.inv file'
+    description: 'The location of the objects.inv file or path'
     default: "build/html/objects.inv"
   docID:
     description: "The DocID Where the resulting documentation should go."
     required: true
   pageID:
+    # Override to Specific Page
     description: "The Specific PageID that will get overwritten."
-    required: true
+    required: false
+    default: 'false'
+  staticParentId:
+    description: "Only look at pages with this pageID as it's Parent"
+    required: false
+    default: 'false'
   coda_token:
     description: "Coda API Token"
     required: true
   template:
     description: "Jinja Template that get's built"
     default: "./src/template.html.jinja"
+  s3profile:
+    description: "AWS Profile to use for S3 rewrites, uses the default profile if not set"
+    required: false
+    default: "default"
+  s3bucket:
+    description: "AWS Bucket to use for S3 rewrites if unset images won't be rewritten for upload"
+    required: false
+    default: "none"
+  s3prefix:
+    description: "AWS Object Path Prefix to use for S3 Rewrites. By default it's blank"
+    required: false
+    default: ""
+  dodelete:
+    description: "When writing a path of pages, delete unmatched pages in the target document. (yes/no) default yes"
+    required: false
+    default: "yes"
 #outputs:
 #  num_squared:
 #    description: 'Square of the input'
@@ -39,7 +61,7 @@ runs:
 
     - name: parse_and_upload.py
       id: pau
-      run: source venv/bin/activate; ./src/parse_and_upload.py
+      run: source venv/bin/activate; ./src/parse_and_upload.py -vvv
       shell: bash
       working-directory: ${{ github.action_path }}
       env:
@@ -49,4 +71,8 @@ runs:
         PAGEID: ${{ inputs.pageID }}
         CODA_TOKEN: ${{ inputs.coda_token }}
         TEMPLATE: ${{ inputs.template }}
-
+        STATICPID: ${{ inputs.staticParentId }}
+        S3PROFILE: ${{ inputs.s3profile }}
+        S3BUCKET: ${{ inputs.s3bucket }}
+        S3PREFIX: ${{ inputs.s3prefix }}
+        DODEL: ${{ inputs.dodelete }}
